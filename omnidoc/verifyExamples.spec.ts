@@ -190,6 +190,7 @@ describe('Documentation Examples Coverage', () => {
     'NoCentric',
     'NiceTicksAlgorithm',
     'EasingInput',
+    'AnimationInterpolateFn',
   ];
 
   describe.each(allExports.filter(name => !exportsThatNeedExamples.includes(name)))('Export: %s', exportName => {
