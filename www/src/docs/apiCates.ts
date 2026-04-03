@@ -100,4 +100,8 @@ export const apiCates = [
     name: 'shapes',
     items: ['Cross', 'Curve', 'Dot', 'Polygon', 'Rectangle', 'Sector', 'Trapezoid', 'Symbols'],
   },
+  {
+    name: 'animation',
+    items: ['matchByIndex', 'matchByDataKey'],
+  },
 ];
