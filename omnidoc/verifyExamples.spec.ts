@@ -194,6 +194,10 @@ describe('Documentation Examples Coverage', () => {
     'AnimationMatchBy',
     'matchByIndex',
     'matchByDataKey',
+    'AnimationProgressProvider',
+    'useAnimationProgress',
+    'AnimationHandle',
+    'AnimationStatus',
   ];
 
   describe.each(allExports.filter(name => !exportsThatNeedExamples.includes(name)))('Export: %s', exportName => {

@@ -102,6 +102,6 @@ export const apiCates = [
   },
   {
     name: 'animation',
-    items: ['matchByIndex', 'matchByDataKey'],
+    items: ['matchByIndex', 'matchByDataKey', 'AnimationProgressProvider', 'useAnimationProgress'],
   },
 ];
