@@ -777,6 +777,108 @@ describe('<Pie />', () => {
       expect(container.querySelectorAll('.customized-label-line')).toHaveLength(sectorsData.length);
     });
 
+    test('should hide outside labels below minShowLabelAngle', () => {
+      const crowdedData = [
+        { name: 'Large slice', value: 1000 },
+        { name: 'Medium slice', value: 50 },
+        { name: 'Tiny slice A', value: 1 },
+        { name: 'Tiny slice B', value: 1 },
+        { name: 'Tiny slice C', value: 1 },
+        { name: 'Tiny slice D', value: 1 },
+      ];
+
+      const { container } = render(
+        <PieChart width={500} height={500}>
+          <Pie
+            isAnimationActive={false}
+            cx={250}
+            cy={250}
+            label
+            outerRadius={170}
+            data={crowdedData}
+            dataKey="value"
+            minShowLabelAngle={5}
+          />
+        </PieChart>,
+      );
+
+      expect(container.querySelectorAll('.recharts-pie-label-text')).toHaveLength(2);
+      expect(container.querySelectorAll('.recharts-pie-label-line')).toHaveLength(2);
+    });
+
+    test('should route label lines through an additional elbow when avoidLabelOverlap is enabled', () => {
+      const crowdedData = [
+        { name: 'Large slice', value: 9870 },
+        { name: 'Medium slice', value: 120 },
+        { name: 'Tiny slice A', value: 3 },
+        { name: 'Tiny slice B', value: 2 },
+        { name: 'Tiny slice C', value: 2 },
+        { name: 'Tiny slice D', value: 1 },
+        { name: 'Tiny slice E', value: 1 },
+        { name: 'Tiny slice F', value: 1 },
+      ];
+
+      const withDefaultLayout = vi.fn((props: CustomizedLabelLineProps) => {
+        const { points } = props;
+        if (!points) return <></>;
+        return (
+          <path
+            d={points.map((p, index) => `${index === 0 ? 'M' : 'L'}${p.x},${p.y}`).join('')}
+            className="customized-label-line-default"
+          />
+        );
+      });
+
+      const withCollisionLayout = vi.fn((props: CustomizedLabelLineProps) => {
+        const { points } = props;
+        if (!points) return <></>;
+        return (
+          <path
+            d={points.map((p, index) => `${index === 0 ? 'M' : 'L'}${p.x},${p.y}`).join('')}
+            className="customized-label-line-avoid-overlap"
+          />
+        );
+      });
+
+      render(
+        <PieChart width={500} height={500}>
+          <Pie
+            isAnimationActive={false}
+            cx={250}
+            cy={250}
+            label
+            labelLine={withDefaultLayout}
+            outerRadius={170}
+            data={crowdedData}
+            dataKey="value"
+          />
+        </PieChart>,
+      );
+
+      render(
+        <PieChart width={500} height={500}>
+          <Pie
+            isAnimationActive={false}
+            cx={250}
+            cy={250}
+            label
+            labelLine={withCollisionLayout}
+            outerRadius={170}
+            data={crowdedData}
+            dataKey="value"
+            avoidLabelOverlap
+          />
+        </PieChart>,
+      );
+
+      const defaultPointLengths = withDefaultLayout.mock.calls.map(call => call[0].points?.length);
+      const overlapAwarePointLengths = withCollisionLayout.mock.calls.map(call => call[0].points?.length);
+
+      expect(defaultPointLengths.every(length => length === 2)).toBe(true);
+      expect(overlapAwarePointLengths.some(length => length === 4)).toBe(true);
+      expect(overlapAwarePointLengths.some(length => length === 2)).toBe(true);
+    });
+
     it('should render label with position=center', () => {
       // https://github.com/recharts/recharts/issues/5985
       const { container } = render(
