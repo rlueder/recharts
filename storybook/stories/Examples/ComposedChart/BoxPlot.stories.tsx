@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Legend,
   ResponsiveContainer,
+  Scatter,
   Tooltip,
   TooltipContentProps,
   XAxis,
@@ -20,12 +21,30 @@ type OutlierDatum = {
   value: number;
 };
 
+type MeanDatum = {
+  name: string;
+  value: number;
+};
+
 const outliers: ReadonlyArray<OutlierDatum> = boxPlots.flatMap(entry =>
   (entry.outliers ?? []).map(value => ({
     name: entry.name,
     value,
   })),
 );
+
+const means: ReadonlyArray<MeanDatum> = boxPlots
+  .filter(entry => entry.average != null)
+  .map(entry => ({ name: entry.name, value: entry.average as number }));
+
+const numericValues: ReadonlyArray<number> = [
+  ...boxPlots.flatMap(entry => [entry.min, entry.lowerQuartile, entry.median, entry.upperQuartile, entry.max]),
+  ...outliers.map(entry => entry.value),
+  ...means.map(entry => entry.value),
+];
+
+const axisMax = Math.ceil(Math.max(...numericValues) / 10) * 10;
+const numericAxisTicks = Array.from({ length: axisMax / 10 + 1 }, (_, index) => index * 10);
 
 const sansTextStyles = {
   fontFamily: 'sans-serif',
@@ -64,15 +83,33 @@ const TooltipContent = ({ active, payload }: TooltipContentProps) => {
     return null;
   }
 
+  const orderedStats = [
+    { label: 'Minimum', value: entry.min },
+    { label: 'Q1', value: entry.lowerQuartile },
+    { label: 'Median', value: entry.median },
+    { label: 'Mean', value: entry.average },
+    { label: 'Q3', value: entry.upperQuartile },
+    { label: 'Maximum', value: entry.max },
+  ]
+    .filter(stat => stat.value != null)
+    .sort((a, b) => (a.value as number) - (b.value as number));
+
   return (
     <div style={tooltipStyle}>
       <p style={{ margin: 0, fontWeight: 600 }}>{entry.name}</p>
-      <p style={{ margin: 0 }}>{`Minimum: ${entry.min} min`}</p>
-      <p style={{ margin: 0 }}>{`Q1: ${entry.lowerQuartile} min`}</p>
-      <p style={{ margin: 0 }}>{`Median: ${entry.median} min`}</p>
-      <p style={{ margin: 0 }}>{`Q3: ${entry.upperQuartile} min`}</p>
-      <p style={{ margin: 0 }}>{`Maximum: ${entry.max} min`}</p>
-      <p style={{ margin: 0 }}>{`Mean: ${entry.average ?? 'N/A'} min`}</p>
+      <p style={{ margin: 0, fontWeight: 600, marginTop: 4 }}>Ordered values</p>
+      {orderedStats.map(stat => (
+        <p
+          key={stat.label}
+          style={{
+            margin: 0,
+            fontWeight: stat.label === 'Mean' ? 600 : 400,
+            color: stat.label === 'Mean' ? '#0f766e' : undefined,
+          }}
+        >
+          {`${stat.label}: ${stat.value} min`}
+        </p>
+      ))}
       <p style={{ margin: 0 }}>
         {`Outliers: ${entry.outliers == null || entry.outliers.length === 0 ? 'None' : entry.outliers.join(', ')}`}
       </p>
@@ -88,11 +125,13 @@ function BaseBoxPlotChart({ layout = 'horizontal' }: { layout?: 'horizontal' | '
   return (
     <ResponsiveContainer minHeight={520}>
       <ComposedChart data={boxPlots} layout={layout} margin={{ top: 24, right: 16, bottom: 24, left: 16 }}>
-        <CartesianGrid strokeDasharray="3 3" />
+        <CartesianGrid strokeDasharray="3 3" horizontal={layout !== 'vertical'} vertical={layout === 'vertical'} />
         {layout === 'horizontal' ? (
           <>
             <XAxis dataKey="name" allowDuplicatedCategory={false} tick={axisTickStyle} />
             <YAxis
+              domain={[0, axisMax]}
+              ticks={numericAxisTicks}
               tick={axisTickStyle}
               label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: axisLabelStyle }}
             />
@@ -101,6 +140,8 @@ function BaseBoxPlotChart({ layout = 'horizontal' }: { layout?: 'horizontal' | '
           <>
             <XAxis
               type="number"
+              domain={[0, axisMax]}
+              ticks={numericAxisTicks}
               tick={axisTickStyle}
               label={{ value: 'Minutes', position: 'insideBottom', style: axisLabelStyle }}
             />
@@ -109,8 +150,9 @@ function BaseBoxPlotChart({ layout = 'horizontal' }: { layout?: 'horizontal' | '
         )}
         <RechartsBoxPlot
           name="Distribution"
-          fill="#7c90db"
-          stroke="#334155"
+          barSize={22}
+          fill="#a9baf5"
+          stroke="none"
           minDataKey="min"
           q1DataKey="lowerQuartile"
           medianDataKey="median"
@@ -118,12 +160,14 @@ function BaseBoxPlotChart({ layout = 'horizontal' }: { layout?: 'horizontal' | '
           maxDataKey="max"
           whiskerStroke="#334155"
           medianStroke="#0f172a"
+          medianStrokeWidth={1}
           whiskerWidth={6}
           outlierData={outliers}
           outlierDataKey="value"
-          outlierScatterProps={{ name: 'Outliers', fill: '#dc2626' }}
+          outlierScatterProps={{ name: 'Outliers', fill: '#dc2626', legendType: 'circle' }}
           isAnimationActive={false}
         />
+        <Scatter name="Mean" data={means} dataKey="value" fill="#0f766e" shape="square" legendType="square" />
         <Tooltip content={<TooltipContent />} />
         <Legend wrapperStyle={sansTextStyles} formatter={legendFormatter} />
         <RechartsHookInspector />
