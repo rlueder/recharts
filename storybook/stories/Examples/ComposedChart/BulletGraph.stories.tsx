@@ -354,6 +354,111 @@ const expensesData: ReadonlyArray<BulletGraphRow> = [
   { name: 'Defects', actual: 18, target: 12, ranges: [20, 30, 50] },
 ];
 
+interface BulletMetricSpec {
+  label: string;
+  unit: string;
+  max: number;
+  tickValues: ReadonlyArray<number>;
+  row: BulletGraphRow;
+}
+
+const verticalMultipleMetrics: ReadonlyArray<BulletMetricSpec> = [
+  {
+    label: 'Revenue',
+    unit: 'U.S. $ (1,000s)',
+    max: 300,
+    tickValues: [0, 50, 100, 150, 200, 250, 300],
+    row: { name: 'Revenue', actual: 257, target: 270, ranges: [150, 80, 70] },
+  },
+  {
+    label: 'Profit',
+    unit: '%',
+    max: 30,
+    tickValues: [0, 5, 10, 15, 20, 25, 30],
+    row: { name: 'Profit', actual: 22.5, target: 26.5, ranges: [12, 13, 5] },
+  },
+  {
+    label: 'Avg Order Size',
+    unit: 'U.S. $',
+    max: 600,
+    tickValues: [0, 100, 200, 300, 400, 500, 600],
+    row: { name: 'Avg Order Size', actual: 330, target: 550, ranges: [350, 160, 90] },
+  },
+  {
+    label: 'New Customers',
+    unit: 'Count',
+    max: 2500,
+    tickValues: [0, 500, 1000, 1500, 2000, 2500],
+    row: { name: 'New Customers', actual: 1650, target: 2050, ranges: [1450, 650, 400] },
+  },
+  {
+    label: 'Cust Satisfaction',
+    unit: 'Top Rating of 5',
+    max: 5,
+    tickValues: [0, 1, 2, 3, 4, 5],
+    row: { name: 'Cust Satisfaction', actual: 4.65, target: 4.45, ranges: [2.6, 1.5, 0.9] },
+  },
+];
+
+const VerticalMultipleRow = ({ metric }: { metric: BulletMetricSpec }) => {
+  const preparedData = prepareData([metric.row]);
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', alignItems: 'center', marginBottom: 16 }}>
+      <div style={{ textAlign: 'right', paddingRight: 10, fontFamily: sansSerifFont, lineHeight: 1.15 }}>
+        <div style={{ fontWeight: 700, fontSize: 18 }}>{metric.label}</div>
+        <div style={{ fontSize: 14 }}>{metric.unit}</div>
+      </div>
+      <div style={{ width: '100%', height: 62 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart
+            data={preparedData}
+            layout="vertical"
+            barGap={-BAND_SIZE}
+            barCategoryGap="0%"
+            margin={{ top: 2, right: 6, left: 2, bottom: 20 }}
+          >
+            <XAxis
+              type="number"
+              domain={[0, metric.max]}
+              ticks={[...metric.tickValues]}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontFamily: sansSerifFont }}
+            />
+            <YAxis type="category" dataKey="name" hide />
+            <Tooltip content={<BulletTooltipContent />} />
+
+            <Bar dataKey="poor" stackId="range" fill={rangeFills.poor} barSize={BAND_SIZE} isAnimationActive={false} />
+            <Bar
+              dataKey="satisfactory"
+              stackId="range"
+              fill={rangeFills.satisfactory}
+              barSize={BAND_SIZE}
+              isAnimationActive={false}
+            />
+            <Bar dataKey="good" stackId="range" fill={rangeFills.good} barSize={BAND_SIZE} isAnimationActive={false} />
+            <Bar
+              dataKey="target"
+              fill="none"
+              barSize={BAND_SIZE}
+              shape={<PrimaryComparativeMarker />}
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="actual"
+              fill={seriesColors.actual}
+              barSize={BAND_SIZE}
+              shape={<CenteredMeasureShape />}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
 export default {
   component: ComposedChart,
 };
@@ -367,7 +472,15 @@ export const TwoComparativeMeasures = {
 };
 
 export const MultipleBulletGraphsVerticalArrangement = {
-  render: () => <HorizontalBulletChart data={standardData} />,
+  render: () => (
+    <div style={{ backgroundColor: '#efefef', padding: 18, fontFamily: sansSerifFont }}>
+      <div style={{ marginLeft: 160, marginBottom: 8, fontWeight: 700, fontSize: 36, lineHeight: 1 }}>2005 YTD</div>
+      {verticalMultipleMetrics.map(metric => (
+        <VerticalMultipleRow key={metric.label} metric={metric} />
+      ))}
+      <RechartsHookInspector />
+    </div>
+  ),
 };
 
 export const MultipleBulletGraphsHorizontalArrangement = {
