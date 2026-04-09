@@ -13,13 +13,26 @@ import { getTransitionVal } from '../animation/util';
 import { svgPropertiesAndEvents } from '../util/svgPropertiesAndEvents';
 import { roundTemplateLiteral } from '../util/round';
 
-const getTrapezoidPath = (x: number, y: number, upperWidth: number, lowerWidth: number, height: number): string => {
+const getTrapezoidPath = (
+  x: number,
+  y: number,
+  upperWidth: number,
+  lowerWidth: number,
+  height: number,
+  orientation: 'horizontal' | 'vertical',
+): string => {
   const widthGap = upperWidth - lowerWidth;
   let path;
   path = roundTemplateLiteral`M ${x},${y}`;
-  path += roundTemplateLiteral`L ${x + upperWidth},${y}`;
-  path += roundTemplateLiteral`L ${x + upperWidth - widthGap / 2},${y + height}`;
-  path += roundTemplateLiteral`L ${x + upperWidth - widthGap / 2 - lowerWidth},${y + height}`;
+  if (orientation === 'horizontal') {
+    path += roundTemplateLiteral`L ${x + height},${y + widthGap / 2}`;
+    path += roundTemplateLiteral`L ${x + height},${y + widthGap / 2 + lowerWidth}`;
+    path += roundTemplateLiteral`L ${x},${y + upperWidth}`;
+  } else {
+    path += roundTemplateLiteral`L ${x + upperWidth},${y}`;
+    path += roundTemplateLiteral`L ${x + upperWidth - widthGap / 2},${y + height}`;
+    path += roundTemplateLiteral`L ${x + upperWidth - widthGap / 2 - lowerWidth},${y + height}`;
+  }
   path += roundTemplateLiteral`L ${x},${y} Z`;
   return path;
 };
@@ -51,6 +64,11 @@ interface TrapezoidProps {
    * @default 0
    */
   height?: number;
+  /**
+   * Controls whether the trapezoid expands vertically (default) or horizontally.
+   * @default vertical
+   */
+  orientation?: 'horizontal' | 'vertical';
 
   /**
    * If set to true, trapezoid will update and render with a gradual fade-in animation from left to right.
@@ -103,6 +121,7 @@ export const defaultTrapezoidProps = {
   upperWidth: 0,
   lowerWidth: 0,
   height: 0,
+  orientation: 'vertical',
   isUpdateAnimationActive: false,
   animationBegin: 0,
   animationDuration: 1500,
@@ -112,7 +131,7 @@ export const defaultTrapezoidProps = {
 export const Trapezoid: React.FC<Props> = outsideProps => {
   const trapezoidProps = resolveDefaultProps(outsideProps, defaultTrapezoidProps);
 
-  const { x, y, upperWidth, lowerWidth, height, className } = trapezoidProps;
+  const { x, y, upperWidth, lowerWidth, height, className, orientation } = trapezoidProps;
   const { animationEasing, animationDuration, animationBegin, isUpdateAnimationActive } = trapezoidProps;
 
   const pathRef = useRef<SVGPathElement | null>(null);
@@ -159,7 +178,7 @@ export const Trapezoid: React.FC<Props> = outsideProps => {
         <path
           {...svgPropertiesAndEvents(trapezoidProps)}
           className={layerClass}
-          d={getTrapezoidPath(x, y, upperWidth, lowerWidth, height)}
+          d={getTrapezoidPath(x, y, upperWidth, lowerWidth, height, orientation)}
         />
       </g>
     );
@@ -208,7 +227,7 @@ export const Trapezoid: React.FC<Props> = outsideProps => {
           <path
             {...svgPropertiesAndEvents(trapezoidProps)}
             className={layerClass}
-            d={getTrapezoidPath(currX, currY, currUpperWidth, currLowerWidth, currHeight)}
+            d={getTrapezoidPath(currX, currY, currUpperWidth, currLowerWidth, currHeight, orientation)}
             ref={pathRef}
             style={{
               ...animationStyle,

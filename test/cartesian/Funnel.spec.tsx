@@ -156,6 +156,27 @@ describe('<Funnel />', () => {
     expect(firstTrapezoidReversed.getAttribute('y')).toEqual('237');
   });
 
+  it('should render horizontal orientation when set on Funnel', () => {
+    const { container } = render(
+      <FunnelChart width={500} height={300}>
+        <Funnel dataKey="value" data={data} isAnimationActive={false} orientation="horizontal" />
+      </FunnelChart>,
+    );
+
+    const trapezoids = Array.from(container.getElementsByClassName('recharts-trapezoid'));
+    expect(trapezoids).toHaveLength(data.length);
+
+    const firstTrapezoid = trapezoids[0];
+    expect(firstTrapezoid.getAttribute('orientation')).toBe('horizontal');
+    expect(firstTrapezoid.getAttribute('x')).toBe('5');
+    expect(firstTrapezoid.getAttribute('y')).toBe('5');
+    expect(firstTrapezoid.getAttribute('height')).toBe('98');
+    expect(firstTrapezoid.getAttribute('d')).toBe('M 5,5L 103,34L 103,266L 5,295L 5,5 Z');
+
+    const trapezoidXs = trapezoids.map(item => Number(item.getAttribute('x')));
+    expect(trapezoidXs).toEqual([5, 103, 201, 299, 397]);
+  });
+
   it('should not produce NaN when all data values are 0', () => {
     const zeroData = [
       { value: 0, name: 'A' },

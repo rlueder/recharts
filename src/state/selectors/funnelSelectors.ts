@@ -15,6 +15,7 @@ export type ResolvedFunnelSettings = {
   nameKey: DataKey<any>;
   tooltipType?: TooltipType;
   lastShapeType?: 'triangle' | 'rectangle';
+  orientation?: 'horizontal' | 'vertical';
   reversed?: boolean;
   customWidth?: string | number;
   cells: ReadonlyArray<ReactElement>;
@@ -40,6 +41,7 @@ export const selectFunnelTrapezoids: (
       nameKey,
       tooltipType,
       lastShapeType,
+      orientation,
       reversed,
       customWidth,
       cells,
@@ -74,6 +76,7 @@ export const selectFunnelTrapezoids: (
       displayedData,
       tooltipType,
       lastShapeType,
+      orientation,
       reversed,
       offset,
       customWidth,

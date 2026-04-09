@@ -130,3 +130,60 @@ export const WithChangingDataKey: StoryObj = {
     height: 360,
   },
 };
+
+export const Issue2799HorizontalFunnel: StoryObj = {
+  name: 'Issue #2799 - Horizontal Funnel',
+  render: () => {
+    const data = [
+      {
+        fill: '#EEEEEE',
+        name: 'A',
+        value: 1009,
+      },
+      {
+        fill: '#E0E0E0',
+        name: 'B',
+        value: 903,
+      },
+      {
+        fill: '#BDBDBD',
+        name: 'C',
+        value: 756,
+      },
+      {
+        fill: '#9E9E9E',
+        name: 'D',
+        value: 622,
+      },
+      {
+        fill: '#757575',
+        name: 'E',
+        value: 602,
+      },
+      {
+        fill: '#424242',
+        name: 'F',
+        value: 580,
+      },
+    ];
+
+    return (
+      <ResponsiveContainer width="100%" height={240}>
+        <FunnelChart width={730} height={250} data={data} layout="horizontal">
+          <Tooltip />
+          <Funnel
+            dataKey="value"
+            nameKey="name"
+            orientation="horizontal"
+            isAnimationActive={false}
+            stroke="#424242"
+            lastShapeType="rectangle"
+          >
+            <LabelList dataKey="name" position="right" stroke="none" fill="#000" />
+          </Funnel>
+          <RechartsHookInspector />
+        </FunnelChart>
+      </ResponsiveContainer>
+    );
+  },
+};
