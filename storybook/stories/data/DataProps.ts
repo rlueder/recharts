@@ -11,12 +11,14 @@ export type BoxPlotData = {
 
 // Original data of boxplot graph
 export type BoxPlot = {
+  name: string;
   min: number;
   lowerQuartile: number;
   median: number;
   upperQuartile: number;
   max: number;
   average?: number;
+  outliers?: ReadonlyArray<number>;
 };
 
 export type Impressions = { name: number; cost: number; impression: number };

@@ -112,6 +112,8 @@ export type { Props as ZAxisProps } from './cartesian/ZAxis';
 export type { CustomScaleDefinition } from './util/scale/CustomScaleDefinition';
 export { ErrorBar } from './cartesian/ErrorBar';
 export type { Props as ErrorBarProps } from './cartesian/ErrorBar';
+export { BoxPlot } from './cartesian/BoxPlot';
+export type { BoxPlotProps } from './cartesian/BoxPlot';
 
 export { LineChart } from './chart/LineChart';
 export { BarChart } from './chart/BarChart';
