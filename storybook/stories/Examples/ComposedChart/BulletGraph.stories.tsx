@@ -9,6 +9,7 @@ import {
   ResponsiveContainer,
   BarShapeProps,
 } from '../../../../src';
+import type { TooltipContentProps } from '../../../../src';
 import { RechartsHookInspector } from '../../../storybook-addon-recharts';
 
 interface BulletGraphRow {
@@ -35,10 +36,82 @@ const BAND_SIZE = 30;
 const MEASURE_SIZE = 10;
 
 const rangeFills = {
-  poor: '#999999',
-  satisfactory: '#bfbfbf',
-  good: '#e6e6e6',
+  poor: '#fecaca',
+  satisfactory: '#fde68a',
+  good: '#bbf7d0',
 } as const;
+
+const seriesColors: Record<string, string> = {
+  actual: '#2563eb',
+  target: '#dc2626',
+  previous: '#7c3aed',
+  projectedRemainder: '#60a5fa',
+  poor: rangeFills.poor,
+  satisfactory: rangeFills.satisfactory,
+  good: rangeFills.good,
+};
+
+const sansSerifFont = 'Arial, Helvetica, sans-serif';
+const tooltipOrder = ['actual', 'target', 'previous', 'projectedRemainder', 'poor', 'satisfactory', 'good'];
+const tooltipNameMap: Record<string, string> = {
+  actual: 'Actual',
+  target: 'Target',
+  previous: 'Previous',
+  projectedRemainder: 'Projected remainder',
+  poor: 'Poor range',
+  satisfactory: 'Satisfactory range',
+  good: 'Good range',
+};
+
+const BulletTooltipContent = ({ active, label, payload }: TooltipContentProps<number, string>) => {
+  if (!active || payload == null || payload.length === 0) {
+    return null;
+  }
+
+  const sortedPayload = [...payload].sort((a, b) => {
+    const aKey = String(a.dataKey ?? a.name ?? '');
+    const bKey = String(b.dataKey ?? b.name ?? '');
+    return tooltipOrder.indexOf(aKey) - tooltipOrder.indexOf(bKey);
+  });
+
+  return (
+    <div
+      style={{
+        fontFamily: sansSerifFont,
+        backgroundColor: '#fff',
+        border: '1px solid #d1d5db',
+        padding: '8px 10px',
+        fontSize: 12,
+        lineHeight: 1.35,
+      }}
+    >
+      <div style={{ fontWeight: 700, marginBottom: 4 }}>{label}</div>
+      {sortedPayload.map(entry => {
+        const key = String(entry.dataKey ?? entry.name ?? '');
+        const name = tooltipNameMap[key] ?? key;
+        const swatch = seriesColors[key] ?? '#6b7280';
+
+        return (
+          <div key={`${key}-${entry.value}`} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span
+              style={{
+                width: 10,
+                height: 10,
+                borderRadius: 2,
+                backgroundColor: swatch,
+                border: '1px solid rgba(17, 24, 39, 0.25)',
+                flexShrink: 0,
+              }}
+            />
+            <span>
+              {name}: {entry.value}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 const CenteredMeasureShape = (props: BarShapeProps) => {
   const { x, y, width, height, fill = '#000000' } = props;
@@ -67,8 +140,8 @@ const markerShape = (stroke: string, strokeWidth: number) => {
   };
 };
 
-const PrimaryComparativeMarker = markerShape('#000000', 1.5);
-const SecondaryComparativeMarker = markerShape('#404040', 1.5);
+const PrimaryComparativeMarker = markerShape(seriesColors.target, 1.5);
+const SecondaryComparativeMarker = markerShape(seriesColors.previous, 1.5);
 
 const prepareData = (rows: ReadonlyArray<BulletGraphRow>): ReadonlyArray<PreparedBulletGraphRow> => {
   return rows.map(row => ({
@@ -116,9 +189,23 @@ const HorizontalBulletChart = ({
         margin={{ top: 20, right: 30, left: 30, bottom: 20 }}
       >
         <CartesianGrid horizontal={false} strokeDasharray="3 3" />
-        <XAxis type="number" domain={domain} reversed={reversedScale} tickLine={false} axisLine={false} />
-        <YAxis type="category" dataKey="name" width={120} tickLine={false} axisLine={false} />
-        <Tooltip />
+        <XAxis
+          type="number"
+          domain={domain}
+          reversed={reversedScale}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontFamily: sansSerifFont }}
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={120}
+          tickLine={false}
+          axisLine={false}
+          tick={{ fontFamily: sansSerifFont }}
+        />
+        <Tooltip content={<BulletTooltipContent />} />
 
         <Bar
           dataKey={firstRangeKey}
@@ -162,7 +249,7 @@ const HorizontalBulletChart = ({
         <Bar
           dataKey="actual"
           stackId={showProjection ? 'featured' : undefined}
-          fill="#000000"
+          fill={seriesColors.actual}
           barSize={BAND_SIZE}
           shape={<CenteredMeasureShape />}
           isAnimationActive={false}
@@ -171,7 +258,7 @@ const HorizontalBulletChart = ({
           <Bar
             dataKey="projectedRemainder"
             stackId="featured"
-            fill="#6b7280"
+            fill={seriesColors.projectedRemainder}
             barSize={BAND_SIZE}
             shape={<CenteredMeasureShape />}
             isAnimationActive={false}
@@ -201,9 +288,9 @@ const VerticalBulletChart = ({ data }: VerticalBulletChartProps) => {
         margin={{ top: 30, right: 20, left: 20, bottom: 40 }}
       >
         <CartesianGrid vertical={false} strokeDasharray="3 3" />
-        <XAxis type="category" dataKey="name" tickLine={false} axisLine={false} />
-        <YAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} />
-        <Tooltip />
+        <XAxis type="category" dataKey="name" tickLine={false} axisLine={false} tick={{ fontFamily: sansSerifFont }} />
+        <YAxis type="number" domain={[0, 100]} tickLine={false} axisLine={false} tick={{ fontFamily: sansSerifFont }} />
+        <Tooltip content={<BulletTooltipContent />} />
 
         <Bar dataKey="poor" stackId="range" fill={rangeFills.poor} barSize={BAND_SIZE} isAnimationActive={false} />
         <Bar
@@ -224,7 +311,7 @@ const VerticalBulletChart = ({ data }: VerticalBulletChartProps) => {
         />
         <Bar
           dataKey="actual"
-          fill="#000000"
+          fill={seriesColors.actual}
           barSize={BAND_SIZE}
           shape={<CenteredMeasureShape />}
           isAnimationActive={false}
