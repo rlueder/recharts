@@ -120,10 +120,19 @@ const CenteredMeasureShape = (props: BarShapeProps) => {
     return null;
   }
 
-  const measureY = y + (height - MEASURE_SIZE) / 2;
-  const measureX = Math.min(x, x + width);
+  const isHorizontalBar = Math.abs(width) >= Math.abs(height);
 
-  return <rect x={measureX} y={measureY} width={Math.abs(width)} height={MEASURE_SIZE} fill={fill} />;
+  if (isHorizontalBar) {
+    const measureY = y + (height - MEASURE_SIZE) / 2;
+    const measureX = Math.min(x, x + width);
+
+    return <rect x={measureX} y={measureY} width={Math.abs(width)} height={MEASURE_SIZE} fill={fill} />;
+  }
+
+  const measureX = x + (width - MEASURE_SIZE) / 2;
+  const measureY = Math.min(y, y + height);
+
+  return <rect x={measureX} y={measureY} width={MEASURE_SIZE} height={Math.abs(height)} fill={fill} />;
 };
 
 const markerShape = (stroke: string, strokeWidth: number) => {
@@ -134,9 +143,28 @@ const markerShape = (stroke: string, strokeWidth: number) => {
       return null;
     }
 
-    const markerX = x + width;
+    const isHorizontalBar = Math.abs(width) >= Math.abs(height);
 
-    return <line x1={markerX} y1={y} x2={markerX} y2={y + height} stroke={stroke} strokeWidth={strokeWidth} />;
+    if (isHorizontalBar) {
+      const markerX = x + width;
+
+      return <line x1={markerX} y1={y} x2={markerX} y2={y + height} stroke={stroke} strokeWidth={strokeWidth} />;
+    }
+
+    const markerY = Math.min(y, y + height);
+    const markerX = x + width / 2;
+    const markerExtent = Math.abs(width) * 0.8;
+
+    return (
+      <line
+        x1={markerX - markerExtent / 2}
+        y1={markerY}
+        x2={markerX + markerExtent / 2}
+        y2={markerY}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
   };
 };
 
